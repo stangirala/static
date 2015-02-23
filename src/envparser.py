@@ -1,18 +1,7 @@
-import ConfigParser
-
-def read_config_variables(config_file, section_name):
-  var_dict = {}
-
-  config = ConfigParser.ConfigParser()
-  config.read(config_file)
-
-  for key, value in config.items(section_name):
-    var_dict[key] = value
-
-  return var_dict
+import context
 
 # TODO this method assumes all inputs adher to the split. Fix this.
-def double_bracket_state_machine(var_dict, input_string):
+def double_bracket_state_machine(context_object, input_string):
   parsed_input = []
   i = 0
   while i < len(input_string):
@@ -35,14 +24,13 @@ def double_bracket_state_machine(var_dict, input_string):
         while input_string[i] != '}':
           i += 1
         i += 2
-      key_str = ''.join(var_key)
-      if key_str in var_dict:
-        parsed_input.append(var_dict[key_str])
-      else:
-        parsed_input.append('{{key not found: ' + key_str + '}}')
+
+      #TODO handle bad string.
+      section, param_name = (''.join(var_key)).split('.')
+      parsed_input.append(context_object.read_section_param(section, param_name))
 
   return ''.join(parsed_input)
 
 def env_parser(input_string):
-  var_dict = read_config_variables('/Users/omega9/test/static/config/main.config', 'main')
-  return double_bracket_state_machine(var_dict, input_string)
+  environment_context = context.EnvContext('config/main.config')
+  return double_bracket_state_machine(environment_context, input_string)
